@@ -1,9 +1,8 @@
 """
-Sony Bravia RC API
+Toshiba TL-series TV RC API
 
-By Antonio Parraga Navarro
-
-dedicated to Isabel
+By Sander Schutten
+Based on code from Antonio Parraga Navarro
 
 """
 import logging
@@ -15,17 +14,19 @@ import struct
 import requests
 
 TIMEOUT = 10
+RCPORT = 8080
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class BraviaRC:
+class ToshibaTLRC:
 
-    def __init__(self, host, mac=None):  # mac address is optional but necessary if we want to turn on the TV
-        """Initialize the Sony Bravia RC class."""
+    def __init__(self, host, mac='00-00-00-00-00-00', hash=None):
+        """Initialize the Toshiba TL-series TV RC class."""
 
         self._host = host
         self._mac = mac
+        self._hash = hash
         self._cookies = None
         self._commands = []
         self._content_mapping = []
@@ -37,6 +38,62 @@ class BraviaRC:
         else:
             ret = json.dumps({"method": method, "params": [], "id": 1, "version": "1.0"})
         return ret
+    
+    def auth(self):
+
+        try:
+            response = requests.post('http://'+self._host+':'+ RCPORT + '/v2/public/request_connection',
+                                     body={'user_id':self._mac}, timeout=TIMEOUT)
+            response.raise_for_status()
+
+        except requests.exceptions.HTTPError as exception_instance:
+            _LOGGER.error("[W] HTTPError: " + str(exception_instance))
+            return False
+
+        except Exception as exception_instance:  # pylint: disable=broad-except
+            _LOGGER.error("[W] Exception: " + str(exception_instance))
+            return False
+
+        else:
+            resp = response.json()
+            _LOGGER.debug(json.dumps(resp, indent=4))
+            if resp is None or not resp.get('error'):
+                self._cookies = response.cookies
+                return True
+
+        return False
+
+    
+    def confirm(self):
+        headers = {}
+        if pin:
+            username = ''
+            base64string = base64.encodebytes(('%s:%s' % (username, pin)).encode()) \
+                .decode().replace('\n', '')
+            headers['Authorization'] = "Basic %s" % base64string
+            headers['Connection'] = "keep-alive"
+
+        try:
+            response = requests.post('http://'+self._host+':'+ RCPORT+ '/v2/remote/confirm_connection',
+                                     data=authorization, headers=headers, timeout=TIMEOUT)
+            response.raise_for_status()
+
+        except requests.exceptions.HTTPError as exception_instance:
+            _LOGGER.error("[W] HTTPError: " + str(exception_instance))
+            return False
+
+        except Exception as exception_instance:  # pylint: disable=broad-except
+            _LOGGER.error("[W] Exception: " + str(exception_instance))
+            return False
+
+        else:
+            resp = response.json()
+            _LOGGER.debug(json.dumps(resp, indent=4))
+            if resp is None or not resp.get('error'):
+                self._cookies = response.cookies
+                return True
+
+        return False
 
     def connect(self, pin, clientid, nickname):
         """Connect to TV and get authentication cookie.
