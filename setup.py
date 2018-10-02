@@ -1,5 +1,5 @@
 # pylint: disable=invalid-name, exec-used
-"""Setup braviarc package."""
+"""Setup toshibatlrc package."""
 from __future__ import absolute_import
 import sys
 import os
@@ -13,7 +13,7 @@ CURRENT_DIR = os.path.dirname(__file__)
 # make pythonpack
 # python setup.py register sdist upload
 # and be sure to test it firstly using "python setup.py register sdist upload -r pypitest"
-setup(name='braviarc',
+setup(name='toshibatlrc',
       # version=open(os.path.join(CURRENT_DIR, 'xgboost/VERSION')).read().strip(),
       version='0.3.7',
       description=open(os.path.join(CURRENT_DIR, 'README.md')).read(),
@@ -23,4 +23,4 @@ setup(name='braviarc',
       zip_safe=False,
       packages=find_packages(),
       include_package_data=True,
-      url='https://github.com/aparraga/braviarc.git')
+      url='https://github.com/grumpymeow/toshibatlrc.git')
